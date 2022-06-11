@@ -1,0 +1,141 @@
+"0","library(""xlsx"")"
+"0","library(""mice"")"
+"2","
+Присоединяю пакет: ‘mice’
+
+"
+"2","Следующий объект скрыт от ‘package:stats’:
+
+    filter
+
+"
+"2","Следующие объекты скрыты от ‘package:base’:
+
+    cbind, rbind
+
+"
+"0","library(""VIM"")"
+"2","Загрузка требуемого пакета: colorspace
+"
+"2","Загрузка требуемого пакета: grid
+"
+"2","Registered S3 method overwritten by 'data.table':
+  method           from
+  print.data.table     
+"
+"2","VIM is ready to use.
+
+"
+"2","Suggestions and bug-reports can be submitted at: https://github.com/statistikat/VIM/issues
+"
+"2","
+Присоединяю пакет: ‘VIM’
+
+"
+"2","Следующий объект скрыт от ‘package:datasets’:
+
+    sleep
+
+"
+"0","library(""dplyr"")"
+"2","
+Присоединяю пакет: ‘dplyr’
+
+"
+"2","Следующие объекты скрыты от ‘package:stats’:
+
+    filter, lag
+
+"
+"2","Следующие объекты скрыты от ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+"
+"0","library(""cowplot"")"
+"0","library(""ggplot2"")"
+"2","
+Присоединяю пакет: ‘ggplot2’
+
+"
+"2","Следующий объект скрыт ‘.GlobalEnv’:
+
+    %+%
+
+"
+"0","library(""plyr"")"
+"2","------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+"
+"2","You have loaded plyr after dplyr - this is likely to cause problems.
+If you need functions from both plyr and dplyr, please load plyr first, then dplyr:
+library(plyr); library(dplyr)
+"
+"2","------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+"
+"2","
+Присоединяю пакет: ‘plyr’
+
+"
+"2","Следующие объекты скрыты от ‘package:dplyr’:
+
+    arrange, count, desc, failwith, id, mutate, rename, summarise, summarize
+
+"
+"0","library(""png"")"
+"0","library(""caret"")"
+"2","Загрузка требуемого пакета: lattice
+"
+"0","library(""party"")"
+"2","Загрузка требуемого пакета: mvtnorm
+"
+"2","Загрузка требуемого пакета: modeltools
+"
+"2","Загрузка требуемого пакета: stats4
+"
+"2","
+Присоединяю пакет: ‘modeltools’
+
+"
+"2","Следующий объект скрыт от ‘package:plyr’:
+
+    empty
+
+"
+"2","Загрузка требуемого пакета: strucchange
+"
+"2","Загрузка требуемого пакета: zoo
+"
+"2","
+Присоединяю пакет: ‘zoo’
+
+"
+"2","Следующие объекты скрыты от ‘package:base’:
+
+    as.Date, as.Date.numeric
+
+"
+"2","Загрузка требуемого пакета: sandwich
+"
+"0","library(""partykit"")"
+"2","Загрузка требуемого пакета: libcoin
+"
+"2","
+Присоединяю пакет: ‘partykit’
+
+"
+"2","Следующие объекты скрыты от ‘package:party’:
+
+    cforest, ctree, ctree_control, edge_simple, mob, mob_control, node_barplot, node_bivplot, node_boxplot, node_inner, node_surv, node_terminal, varimp
+
+"
+"0","library(""stablelearner"")"
+"0","library(""ROCR"")"
+"0","library(""PRROC"")"
+"0","library(""magrittr"")"
+"0",""
+"0","#//////оператор конкатенации строк///////"
+"0","""%+%"" <- function(...){"
+"0","  paste0(...)"
+"0","}"
+"0",""
+"0","options(max.print=1000000)"

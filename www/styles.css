@@ -1,0 +1,15 @@
+.modal-dialog {
+  max-width: 400px !important;
+}
+
+#FIO_modal {
+  width: 100% important;
+}
+
+#birthday_modal {
+  width: 150px;
+}
+
+#eth_modal div.selectize-control div.selectize-input{
+  width: 200px;
+}

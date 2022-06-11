@@ -1,0 +1,26 @@
+{
+    "id": "72256AC1",
+    "path": "C:/Program Files/R/app_diagnostics/server.R",
+    "project_path": null,
+    "type": "r_source",
+    "hash": "2134385509",
+    "contents": "",
+    "dirty": true,
+    "created": 1654727449638.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "128,0",
+        "scrollLine": "98"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1654727495,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1654727780645,
+    "read_only": false,
+    "read_only_alternatives": []
+}
