@@ -223,7 +223,9 @@ if (nrow(patients_db) != 0) {
   html_table$ethnicity <- eths
 } else {
   html_table <- patients_db %>%                                                       #добавляем столбец с определением HTML-кода кнопки для строки таблицы
-    dplyr::bind_cols(tibble("Buttons" = character()))
+    dplyr::bind_cols(tibble("Buttons" = character())) %>%
+    mutate(FIO = character()) %>%
+    mutate(ethnicity = character())
 }
 colnames(html_table) <- c("id","ФИО пациента","Дата рождения", "Национальность", "Действия")
 
@@ -297,7 +299,6 @@ server <- function(input, output) {
     select_row <- rv$df[rv$dt_row, ]
     print(select_row$id)
     set_patient_info(select_row[,"id"], select_row[,"ФИО пациента"], select_row[,"Дата рождения"], select_row[,"Национальность"])
-    browser()
     print(rv$patient_info)
     rv$page <- "card_patient"
     print(rv$page)
@@ -320,9 +321,17 @@ server <- function(input, output) {
                       age_patient = age_patient)
     on.exit(dbDisconnect(conn))
     
-    btns <- create_btns2(1:nrow(res))
-    table <- res %>%                                                       #добавляем столбец с определением HTML-кода кнопки для строки таблицы
-    dplyr::bind_cols(tibble("Действия" = btns))
+    if (nrow(res) != 0) {
+      btns <- create_btns2(1:nrow(res))
+      table <- res %>%                                                       #добавляем столбец с определением HTML-кода кнопки для строки таблицы
+        dplyr::bind_cols(tibble("Действия" = btns))
+    } else {
+      table <- res %>%                                                       #добавляем столбец с определением HTML-кода кнопки для строки таблицы
+        mutate(date_visit = as.Date(res$date_visit)) %>%
+        dplyr::bind_cols(tibble("Buttons" = character()))
+    }
+    
+    browser()
     
     colnames(table) <- c ("id", "Дата посещения", "Возраст пациента", "Действия")
     
@@ -391,8 +400,9 @@ server <- function(input, output) {
   shiny::observeEvent(input$finalEdit_patient, {
     shiny::req(rv$edit_button == FALSE)
     print("final_edit enter")
-    print(input$current_id)
-    print(rv$edit_button)
+    if (nrow(rv$df) == 0){
+      rv$keep_track_id <- 1
+    }  
     add_row <- data.frame(
       id = c(rv$keep_track_id),
       FIO = c(input$FIO_modal),
