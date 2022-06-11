@@ -17,6 +17,7 @@ library(reactlog)
 library(RSQLite)
 library(keyring)
 library(bslib)
+library(bsplus)
 
 
 #//////оператор конкатенации строк///////
@@ -141,25 +142,52 @@ ui <- bootstrapPage(
         )
       ),
       div(
-        class = "clinic_info mt-2",
+        class = "visit_info mt-2",
         id = "accordion1",
         div(
           class = "card",
           div(
             class = "card-header",
             id = "headingOne",
-            h3("Все посещения пациента в клинике"),
             shiny::actionButton(
-              inputId = "add_visit",
-              label = "Добавить посещение",
-              icon = shiny::icon("plus"),
-              class = "btn-success"
-            ),
-            div(
-              class = "container-fluid mt-3",
-              style = "padding: 0",
-              DT::DTOutput(outputId = "dt_visits", width = "100%")
+              inputId="down",
+              class = "btn", # добавить data-bs-toggle="collapse" data-bs-target = "idcontent" aria-expanded="false" aria-controls="idcontent"
+              label = "asdasd",
+              icon = shiny::icon("arrow-left"),
+              div(
+                class = "row",
+                div(
+                  class = "col-6",
+                  p("Данные клинических исследований")
+                ),
+                div(
+                  class = "col-6"
+                )
+              )
             )
+          ),
+          div(
+            id = "collapseOne",
+            class = "collapse show", #добавить aria-labelledby="headingOne" data-parent="accordion1"
+            div(
+              class = "card-body",
+              div(
+                class = "row",
+                div()
+              )
+            )
+          ),
+          h3("Все посещения пациента в клинике"),
+          shiny::actionButton(
+            inputId = "add_visit",
+            label = "Добавить посещение",
+            icon = shiny::icon("arrow-left"),
+            class = "btn-success"
+          ),
+          div(
+            class = "container-fluid mt-3",
+            style = "padding: 0",
+            DT::DTOutput(outputId = "dt_visits", width = "100%")
           )
         )
       )
@@ -299,7 +327,6 @@ server <- function(input, output) {
     select_row <- rv$df[rv$dt_row, ]
     print(select_row$id)
     set_patient_info(select_row[,"id"], select_row[,"ФИО пациента"], select_row[,"Дата рождения"], select_row[,"Национальность"])
-    browser()
     print(rv$patient_info)
     rv$page <- "card_patient"
     print(rv$page)
@@ -308,11 +335,9 @@ server <- function(input, output) {
   shiny::observeEvent(rv$patient_info, {
     print("done")
     shiny::req(!is.null(input$current_id) & stringr::str_detect(input$current_id, pattern = "info"))
-    browser()
     updateTextInput(inputId = "FIO", value = rv$patient_info$FIO)
     updateTextInput(inputId = "birth_day", value = rv$patient_info$birth_day)
     updateTextInput(inputId = "ethnicity", value = rv$patient_info$ethnicity)
-    browser()
 
     quary = "SELECT * FROM Visits WHERE id = '" %+% rv$patient_info$id %+% "'"
     conn <- dbConnect(RSQLite::SQLite(), "PatientsDB.db")
@@ -331,8 +356,6 @@ server <- function(input, output) {
         mutate(date_visit = as.Date(res$date_visit)) %>%
         dplyr::bind_cols(tibble("Buttons" = character()))
     }
-    
-    browser()
     
     colnames(table) <- c ("id", "Дата посещения", "Возраст пациента", "Действия")
     
