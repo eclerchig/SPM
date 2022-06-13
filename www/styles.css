@@ -13,3 +13,44 @@
 #eth_modal div.selectize-control div.selectize-input{
   width: 200px;
 }
+
+.accordion_box
+{
+  border: 1px solid gray;
+  padding: 0 15px 1px;
+  background: #e1e1e1;
+  color: #332e2e;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.accordion_box.active
+{
+  background: #fff;
+}
+
+.acc_trigger {
+  padding: 15px 40px 15px 0;
+  margin: 0;
+  font-size: 30px;
+  position:relative;
+  cursor: pointer;
+}
+
+.acc_triger i{
+  position: absolute;
+  right: 0;
+  top: 16px;
+  font-size: 20px;
+}
+
+.acc_container {
+  display: none;
+  line-height: 1.6;
+}
+
+.acc_container p{
+  margin-top: 0px;
+  line-height: 1.6;
+}
+

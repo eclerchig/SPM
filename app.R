@@ -141,63 +141,52 @@ ui <- bootstrapPage(
           )
         )
       ),
+      h3("Все посещения пациента в клинике"),
+      shiny::actionButton(
+        inputId = "add_visit",
+        label = "Добавить посещение",
+        icon = shiny::icon("plus"),
+        class = "btn-success"
+      ),
       div(
-        class = "visit_info mt-2",
-        id = "accordion1",
+        class = "container-fluid mt-3",
+        style = "padding: 0",
+        DT::DTOutput(outputId = "dt_visits", width = "100%")
+      ),
+      div(
+        class="accordion_area",
         div(
-          class = "card",
+          class = "accordion_box",
+          h3(
+              class = "acc_trigger",
+              p("Accordion Title 1"),
+              shiny::icon("plus")
+            ),
           div(
-            class = "card-header",
-            id = "headingOne",
-            shiny::actionButton(
-              inputId="down",
-              class = "btn", # добавить data-bs-toggle="collapse" data-bs-target = "idcontent" aria-expanded="false" aria-controls="idcontent"
-              label = "asdasd",
-              icon = shiny::icon("arrow-left"),
-              div(
-                class = "row",
-                div(
-                  class = "col-6",
-                  p("Данные клинических исследований")
-                ),
-                div(
-                  class = "col-6"
-                )
-              )
-            )
+            class = "acc_container",
+            p("ааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааа")
+          )
+        ),
+        div(
+          class = "accordion_box",
+          h3(
+            class = "acc_trigger",
+            p("Accordion Title 1"),
+            shiny::icon("plus")
           ),
           div(
-            id = "collapseOne",
-            class = "collapse show", #добавить aria-labelledby="headingOne" data-parent="accordion1"
-            div(
-              class = "card-body",
-              div(
-                class = "row",
-                div()
-              )
-            )
-          ),
-          h3("Все посещения пациента в клинике"),
-          shiny::actionButton(
-            inputId = "add_visit",
-            label = "Добавить посещение",
-            icon = shiny::icon("arrow-left"),
-            class = "btn-success"
-          ),
-          div(
-            class = "container-fluid mt-3",
-            style = "padding: 0",
-            DT::DTOutput(outputId = "dt_visits", width = "100%")
+            class = "acc_container",
+            p("ааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааа")
           )
         )
       )
+      
     )
   )
   ),
-  shiny::includeScript("jquary.js")
-  # tags$script(HTML(
-  #   "src='https://code.jquery.com/jquery-3.3.1.slim.min.js' integrity='sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo' crossorigin='anonymous'>;"
-  # )),
+  HTML(
+      "<script src='/assets/js/jquery-3.5.1.min.js'></script>"
+  ),
   # # tags$script(HTML(
   # #   "src='https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js' integrity='sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1' crossorigin='anonymous'>"
   # # )),
@@ -212,6 +201,7 @@ ui <- bootstrapPage(
   #   tags$link(rel = "stylesheet", type = "text/css", href = "https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css", integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor", crossorigin="anonymous")
   # ),
   #shiny::includeCSS("styles.css")
+  includeScript(path = "www/jquary.js")
 )
 
 #функция добавления HTML-кода для создания кнопок удаления/редактирования
@@ -339,12 +329,14 @@ server <- function(input, output) {
     updateTextInput(inputId = "birth_day", value = rv$patient_info$birth_day)
     updateTextInput(inputId = "ethnicity", value = rv$patient_info$ethnicity)
 
-    quary = "SELECT * FROM Visits WHERE id = '" %+% rv$patient_info$id %+% "'"
+    quary = "SELECT * FROM Visits WHERE id_patient = '" %+% rv$patient_info$id %+% "'"
     conn <- dbConnect(RSQLite::SQLite(), "PatientsDB.db")
     res <-  dbGetQuery(conn, quary) %>%
             transmute(id = id,
                       date_visit = as.Date(date_visit),
                       age_patient = age_patient)
+    
+    browser()
     on.exit(dbDisconnect(conn))
     
     if (nrow(res) != 0) {
@@ -357,8 +349,10 @@ server <- function(input, output) {
         dplyr::bind_cols(tibble("Buttons" = character()))
     }
     
-    colnames(table) <- c ("id", "Дата посещения", "Возраст пациента", "Действия")
+    browser()
     
+    colnames(table) <- c ("id", "Дата посещения", "Возраст пациента", "Действия")
+    browser()
     rv$df_visits <- table
     
     print("update inputs")
