@@ -223,10 +223,12 @@ create_btns2 <- function(x) {
     purrr::map_chr(~
                      paste0(
                        '<div class = "btn-group">
-                          <button class="btn btn-default action-button btn-info action_button" id="show_',
-                       .x, '" type="button" onclick=get_id(this.id)>Отобразить все анализы</button>
+                          <button class="btn btn-default action-button btn-info action_button" id="editVisit_',
+                       .x, '" type="button" onclick=get_id_visit(this.id)>Редактировать</button>
+                        <button class="btn btn-default action-button btn-info action_button" id="show_',
+                       .x, '" type="button" onclick=get_id_visit(this.id)>Отобразить все анализы</button>
                           <button class="btn btn-default action-button btn-danger action_button" id="deleteVisit_',
-                       .x, '" type="button" onclick=get_id(this.id)><i class="fa fa-trash-alt"></i></button>
+                       .x, '" type="button" onclick=get_id_visit(this.id)><i class="fa fa-trash-alt"></i></button>
                        </div>'
                      ))
 }
@@ -258,13 +260,15 @@ server <- function(input, output) {
                            date_visit = c(),
                            age_patient = c()),
     dt_row = NULL, #выбранная строка
+    dt_visit_row = NULL,
     add_or_edit = NULL,
     edit_button = NULL,
     keep_track_id = max(html_table$id)+ 1, #отслеживает id
     patient_info = list(id = NULL,
                         FIO = NULL,
                         birth_day = NULL,
-                        ethnicity = NULL)
+                        ethnicity = NULL),
+    keep_track_id_visits = NULL, #отслеживает id visits
   )
   
   change_page <-function(name) {
@@ -336,7 +340,11 @@ server <- function(input, output) {
                       date_visit = as.Date(date_visit),
                       age_patient = age_patient)
     
-    browser()
+    if (nrow(res) == 0){
+      rv$keep_track_id_visits <- 1
+    } else{
+      rv$keep_track_id_visits = max(res$id)+ 1
+    }
     on.exit(dbDisconnect(conn))
     
     if (nrow(res) != 0) {
@@ -349,10 +357,7 @@ server <- function(input, output) {
         dplyr::bind_cols(tibble("Buttons" = character()))
     }
     
-    browser()
-    
     colnames(table) <- c ("id", "Дата посещения", "Возраст пациента", "Действия")
-    browser()
     rv$df_visits <- table
     
     print("update inputs")
@@ -380,9 +385,8 @@ server <- function(input, output) {
   
   # ПОДТВЕРЖДЕНИЕ ИЗМЕНЕНИЕ ЗАПИСИ ПАЦИЕНТА
   shiny::observeEvent(input$finalEdit_patient, {
-    print("хотя бы зашел")
     shiny::req(!is.null(input$current_id) & (rv$edit_button == TRUE))
-    print("точно зашел")
+
     edited_row <- dplyr::tibble(
       id = as.numeric(rv$df[rv$dt_row, "id"]),
       FIO = input$FIO_modal,
@@ -465,10 +469,10 @@ server <- function(input, output) {
   
   shiny::observeEvent(input$current_id, {
     shiny::req(!is.null(input$current_id) & stringr::str_detect(input$current_id, pattern = "delete"))
-    confirm_delete()
+    confirm_delete("Patient")
   })
   
-  shiny::observeEvent(input$finalConfirm_delete, {
+  shiny::observeEvent(input$finalConfirm_deletePatient, {
     rv$dt_row <- which(stringr::str_detect(rv$df[,"Действия"], pattern = paste0("\\b", input$current_id, "\\b")))
     
     current_id = as.numeric(rv$df[rv$dt_row, "id"])
@@ -487,8 +491,144 @@ server <- function(input, output) {
     shiny::removeModal()
   })
   
+  #-------------------------ФУНКЦИЯ НА ВЫЗОВ ИЗМЕНЕНИЯ СТРОКИ В ТАБЛИЦЕ VISIT------------------------------
+  shiny::observeEvent(input$current_id_visit, {
+    print("change_row_visit")
+    shiny::req(!is.null(input$current_id_visit) & stringr::str_detect(input$current_id_visit, pattern = "edit"))
+    rv$dt_visit_row <- which(stringr::str_detect(rv$df_visits[,"Действия"], pattern = paste0("\\b", input$current_id_visit, "\\b")))
+    select_row <- rv$df_visits[rv$dt_visit_row, ]
+    print(select_row$id)
+    rv$edit_button = TRUE
+    modal_dVisit(
+      date_visit = select_row[, "Дата посещения"], edit = rv$edit_button)
+  })
+  #-------------------------ФУНКЦИЯ НА ВЫЗОВ УДАЛЕНИЯ СТРОКИ В ТАБЛИЦЕ VISIT------------------------------
+  shiny::observeEvent(input$finalConfirm_deleteVisit, {
+    rv$dt_row <- which(stringr::str_detect(rv$df[,"Действия"], pattern = paste0("\\b", input$current_id, "\\b")))
+    
+    current_id = as.numeric(rv$df[rv$dt_row, "id"])
+    query <- "DELETE FROM Visits WHERE id = '" %+% current_id %+%"'"
+    browser()
+    conn <- dbConnect(RSQLite::SQLite(), "PatientsDB.db")
+    dbExecute(conn, query)
+    on.exit(dbDisconnect(conn))
+    browser()
+    rv$df_visits <- rv$df_visits[-rv$dt_visit_row, ]
+    
+    shiny::removeModal()
+  })
+  #-------------------------ФУНКЦИЯ НА ВЫЗОВ ПОДТВЕРЖДЕНИЯ УДАЛЕНИЯ СТРОКИ В ТАБЛИЦЕ VISIT------------------------------
+  shiny::observeEvent(input$current_id_visit, {
+    print("delete_row_visit")
+    shiny::req(!is.null(input$current_id_visit) & stringr::str_detect(input$current_id_visit, pattern = "delete"))
+    rv$dt_visit_row <- which(stringr::str_detect(rv$df_visits[,"Действия"], pattern = paste0("\\b", input$current_id_visit, "\\b")))
+    confirm_delete("Visit")
+  })
   
+  #-------------------------ФУНКЦИЯ НА СОБЫТИЕ ДОБАВЛЕНИЯ ЗАПИСИ В ТАБЛИЦЕ VISIT------------------------------
+  shiny::observeEvent(input$add_visit, {
+      print("add visit")
+      rv$edit_button = FALSE
+      modal_dVisit(
+        date_visit = "", edit = rv$edit_button)
+    })
   
+  #-------------------------ФУНКЦИЯ НА ДОБАВЛЕНИЕ ЗАПИСИ В БД И ТАБЛИЦУ------------------------------
+  shiny::observeEvent(input$finalEdit_visit, {
+    shiny::req(rv$edit_button == FALSE)
+    print("final_add enter")
+    
+    add_row <- data.frame(
+      id_patient = rv$patient_info$id,
+      date_visit = input$visit_modal
+    )
+
+    query <- "INSERT INTO Visits (id_patient, date_visit) VALUES (
+              '" %+% add_row[,'id_patient'] %+% "',
+              '" %+% add_row[,'date_visit'] %+% "')"
+    conn <- dbConnect(RSQLite::SQLite(), "PatientsDB.db")
+    dbExecute(conn, query)
+    
+    query <- "SELECT * FROM Visits WHERE id =
+              '" %+% rv$keep_track_id_visits %+% "'"
+    add_row <- dbGetQuery(conn,query)
+    
+    add_row <- add_row %>%                                                       #добавляем столбец с определением HTML-кода кнопки для строки таблицы
+      dplyr::bind_cols(tibble("Buttons" = create_btns2(rv$keep_track_id)))
+    
+    on.exit(dbDisconnect(conn))
+  
+    
+    colnames(add_row) <- c("id","ФИО пациента","Дата посещения", "Возраст пациента", "Действия")
+    add_row[,"Дата посещения"] <- as.Date(add_row[,"Дата посещения"])
+    
+    rv$df_visits <- rv$df_visits %>%
+      dplyr::bind_rows(add_row[,c("id","Дата посещения","Возраст пациента", "Действия")])
+    
+    rv$keep_track_id_visits <- max(rv$df_visits[,"id"]) + 1
+    browser()
+    
+    rv$edit_button = NULL
+    shiny::removeModal()
+  })
+  
+  #-------------------------ФУНКЦИЯ НА ИЗМЕНЕНИЕ ЗАПИСИ В БД И ТАБЛИЦУ------------------------------
+  shiny::observeEvent(input$finalEdit_visit, {
+    shiny::req(!is.null(input$current_id) & (rv$edit_button == TRUE))
+    print("final_edit enter")
+    
+    browser()
+    
+    query <- "UPDATE Visits SET date_visit =
+              '" %+% as.Date(input$visit_modal) %+% "' WHERE id =
+              '" %+% as.numeric(rv$df_visits[rv$dt_visit_row, "id"]) %+% "'"
+              
+    conn <- dbConnect(RSQLite::SQLite(), "PatientsDB.db")
+    dbExecute(conn, query)
+    on.exit(dbDisconnect(conn))
+  
+    rv$df_visits[rv$dt_visit_row,"Дата посещения"] <- as.Date(input$visit_modal)
+
+    browser()
+    
+    rv$edit_button = NULL
+    shiny::removeModal()
+  })
+  
+  # ПОДТВЕРЖДЕНИЕ ИЗМЕНЕНИЕ ЗАПИСИ ПАЦИЕНТА
+  shiny::observeEvent(input$finalEdit_patient, {
+    shiny::req(!is.null(input$current_id) & (rv$edit_button == TRUE))
+    
+    edited_row <- dplyr::tibble(
+      id = as.numeric(rv$df[rv$dt_row, "id"]),
+      FIO = input$FIO_modal,
+      birth_day = input$birthday_modal,
+      ethnicity = input$eth_modal,
+      Buttons = rv$df$Buttons[rv$dt_row]
+    )
+    
+    # rv$df[rv$dt_row, "id"] <- rv$dt_row
+    # rv$df[rv$dt_row, "FIO"] <- input$FIO_modal
+    # rv$df[rv$dt_row, "birth_day"] <- input$birthday_modal
+    # rv$df[rv$dt_row, "ethnicity"] <- input$eth_modal
+    # rv$df[rv$dt_row, "Buttons"] <- rv$df$Buttons[rv$dt_row]
+    browser()
+    rv$df[rv$dt_row, ] <- edited_row
+    query <- "UPDATE Patients SET
+              FIO ='" %+% edited_row[['FIO']] %+% "',
+              birth_day = '" %+% edited_row[['birth_day']] %+% "',
+              ethnicity ='" %+% which(stringr::str_detect(list_eths, edited_row[['ethnicity']])) %+% "'
+              WHERE id = '" %+% edited_row[['id']] %+% "'"
+    browser()
+    conn <- dbConnect(RSQLite::SQLite(), "PatientsDB.db")
+    dbExecute(conn, query)
+    on.exit(dbDisconnect(conn))
+    #обновление на странице карты пациента
+    set_patient_info(rv$dt_row, input$FIO_modal, input$birthday_modal, input$eth_modal)
+    rv$edit_button = NULL
+    
+    shiny::removeModal()
+  })
 }
 # Run the application 
 shinyApp(ui = ui, server = server)

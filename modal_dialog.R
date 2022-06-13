@@ -52,7 +52,7 @@ modal_dialog <- function(FIO, birth_day, eth, list_eths, edit) {
   ) %>% shiny::showModal()
 }
 
-confirm_delete <- function(){
+confirm_delete <- function(mode){
   shiny::modalDialog(
     id = "confirm_modal",
     title = "Подверждение удаления",
@@ -62,7 +62,7 @@ confirm_delete <- function(){
     footer = div(
       class = "pull-right container",
       shiny::actionButton(
-        inputId = "finalConfirm_delete",
+        inputId = "finalConfirm_delete" %+% mode,
         label = "Да, удалить",
         icon = shiny::icon("check"),
         class = "btn-info"
@@ -71,6 +71,46 @@ confirm_delete <- function(){
         inputId = "dismiss_confirm",
         label = "Отменить",
         icon = shiny::icon("fa-xmark"),
+        class = "btn-danger"
+      )
+    )
+  ) %>% shiny::showModal()
+}
+
+modal_dVisit <- function(date_visit, edit) {
+  if (edit) {
+    x <- "Подтвердить изменения"
+  } else {
+    x <- "Добавить запись"
+  }
+  shiny::modalDialog(
+    id = "edit_modal",
+    title = "Данные посещения",
+    div(
+      class = "row",
+      div(
+        style = "display: inline-block;",
+        shiny::dateInput(
+          inputId ="visit_modal",
+          label = "Дата посещения", 
+          value = date_visit,
+          format = "yyyy-mm-dd",
+          language = "ru")
+      )
+    ),
+    size = "m",
+    easyClose = TRUE,
+    footer = div(
+      class = "pull-right container",
+      shiny::actionButton(
+        inputId = "finalEdit_visit",
+        label = x,
+        icon = shiny::icon("edit"),
+        class = "btn-info"
+      ),
+      shiny::actionButton(
+        inputId = "dismiss_modal",
+        label = "Закрыть",
         class = "btn-danger"
       )
     )
