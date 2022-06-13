@@ -1,4 +1,5 @@
 $(document).ready(function() {
+  $('.acc_container label').prop('readonly', true);
   $('.accordion-box h3').setAttribute("aria-hidden", "true");
   $('.accordion_box:first').addClass('active');
   $('.accordion_box: first').children('.acc_trigger').children('i').addClass('fa-minus');

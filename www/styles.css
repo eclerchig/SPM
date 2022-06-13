@@ -17,7 +17,6 @@
 .accordion_box
 {
   border: 1px solid gray;
-  padding: 0 15px 1px;
   background: #e1e1e1;
   color: #332e2e;
   border-radius: 10px;
@@ -30,9 +29,8 @@
 }
 
 .acc_trigger {
-  padding: 15px 40px 15px 0;
+  padding: 15px 40px;
   margin: 0;
-  font-size: 30px;
   position:relative;
   cursor: pointer;
 }
@@ -45,12 +43,10 @@
 }
 
 .acc_container {
-  display: none;
   line-height: 1.6;
 }
 
 .acc_container p{
   margin-top: 0px;
-  line-height: 1.6;
 }
 

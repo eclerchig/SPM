@@ -153,34 +153,18 @@ ui <- bootstrapPage(
         style = "padding: 0",
         DT::DTOutput(outputId = "dt_visits", width = "100%")
       ),
+      h3("Клинические анализы по посещению",
+         class = "mt-4"),
+      shiny::actionButton(
+        inputId = "add_visit",
+        label = "Добавить запись анализов",
+        icon = shiny::icon("plus"),
+        class = "btn-success"
+      ),
       div(
-        class="accordion_area",
-        div(
-          class = "accordion_box",
-          h3(
-              class = "acc_trigger",
-              p("Accordion Title 1"),
-              shiny::icon("plus")
-            ),
-          div(
-            class = "acc_container",
-            p("ааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааа")
-          )
-        ),
-        div(
-          class = "accordion_box",
-          h3(
-            class = "acc_trigger",
-            p("Accordion Title 1"),
-            shiny::icon("plus")
-          ),
-          div(
-            class = "acc_container",
-            p("ааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааа")
-          )
-        )
+        class="accordion_area mt-2",
+        uiOutput("labs_output")
       )
-      
     )
   )
   ),
@@ -225,12 +209,28 @@ create_btns2 <- function(x) {
                        '<div class = "btn-group">
                           <button class="btn btn-default action-button btn-info action_button" id="editVisit_',
                        .x, '" type="button" onclick=get_id_visit(this.id)>Редактировать</button>
-                        <button class="btn btn-default action-button btn-info action_button" id="show_',
+                        <button class="btn btn-default action-button btn-info action_button" id="showVisit_',
                        .x, '" type="button" onclick=get_id_visit(this.id)>Отобразить все анализы</button>
                           <button class="btn btn-default action-button btn-danger action_button" id="deleteVisit_',
                        .x, '" type="button" onclick=get_id_visit(this.id)><i class="fa fa-trash-alt"></i></button>
                        </div>'
                      ))
+}
+
+create_btns3 <- function(x) {
+  x %>%
+    purrr::map_chr(~
+                     paste0(
+                       '<div class = "btn-group">
+                          <button class="btn btn-default action-button btn-info action_button" id="calcLab_',
+                       .x, '" type="button" onclick=get_id_lab(this.id)>Рассчиать диагноз</button>
+                        <button class="btn btn-default action-button btn-info action_button" id="editLab_',
+                       .x, '" type="button" onclick=get_id_lab(this.id)>Редактировать</button>
+                          <button class="btn btn-default action-button btn-danger action_button" id="deleteLab_',
+                       .x, '" type="button" onclick=get_id_lab(this.id)><i class="fa fa-trash-alt"></i></button>
+                     </div>'
+                     )
+    )
 }
 if (nrow(patients_db) != 0) {
   html_btns <- create_btns(1:nrow(patients_db))
@@ -259,8 +259,16 @@ server <- function(input, output) {
     df_visits = data.frame(id = c(),
                            date_visit = c(),
                            age_patient = c()),
-    dt_row = NULL, #выбранная строка
+    df_labs = data.frame(id = c(),
+                         date_lab = c(),
+                         PRL = c(),
+                         vitA = c()),
+                         
+                         
+    dt_row = NULL,
     dt_visit_row = NULL,
+    dt_lab_row = NULL,
+    
     add_or_edit = NULL,
     edit_button = NULL,
     keep_track_id = max(html_table$id)+ 1, #отслеживает id
@@ -269,6 +277,8 @@ server <- function(input, output) {
                         birth_day = NULL,
                         ethnicity = NULL),
     keep_track_id_visits = NULL, #отслеживает id visits
+    keep_track_id_labs = NULL,
+    show_labs = FALSE
   )
   
   change_page <-function(name) {
@@ -363,6 +373,7 @@ server <- function(input, output) {
     print("update inputs")
   })
   
+  #----------------------ОТОБРАЖЕНИЕ/ПРЯТАНЬЕ СТРАНИЦ---------------------
   shiny::observeEvent(rv$page, {
     print(rv$page)
     shinyjs::hide(selector = ".page")
@@ -491,7 +502,7 @@ server <- function(input, output) {
     shiny::removeModal()
   })
   
-  #-------------------------ФУНКЦИЯ НА ВЫЗОВ ИЗМЕНЕНИЯ СТРОКИ В ТАБЛИЦЕ VISIT------------------------------
+  #-------------------------ФУНКЦИИ НА ВЫЗОВ ВЫБОРА СТРОКИ В ТАБЛИЦЕ VISIT------------------------------
   shiny::observeEvent(input$current_id_visit, {
     print("change_row_visit")
     shiny::req(!is.null(input$current_id_visit) & stringr::str_detect(input$current_id_visit, pattern = "edit"))
@@ -502,17 +513,40 @@ server <- function(input, output) {
     modal_dVisit(
       date_visit = select_row[, "Дата посещения"], edit = rv$edit_button)
   })
+  
+  shiny::observeEvent(input$current_id_visit, {
+    print("show_row_visit")
+    shiny::req(!is.null(input$current_id_visit) & stringr::str_detect(input$current_id_visit, pattern = "show"))
+    rv$dt_visit_row <- which(stringr::str_detect(rv$df_visits[,"Действия"], pattern = paste0("\\b", input$current_id_visit, "\\b")))
+    select_row <- rv$df_visits[rv$dt_visit_row, ]
+    quary <- "SELECT * FROM Lab_tests WHERE id_visit =
+              '" %+% select_row$id %+% "'"
+    conn <- dbConnect(RSQLite::SQLite(), "PatientsDB.db")
+    rv$df_labs <-  dbGetQuery(conn, quary) %>%
+      transmute(id = id,
+                date_lab = as.Date(date),
+                PRL = PRL,
+                vitA = vitA)
+    
+    if (nrow(rv$df_labs) == 0){
+      rv$keep_track_id_labs <- 1
+    } else{
+      rv$keep_track_id_labs = max(rv$df_labs$id)+ 1
+    }
+    on.exit(dbDisconnect(conn))
+    rv$show_labs <- TRUE
+  })
   #-------------------------ФУНКЦИЯ НА ВЫЗОВ УДАЛЕНИЯ СТРОКИ В ТАБЛИЦЕ VISIT------------------------------
   shiny::observeEvent(input$finalConfirm_deleteVisit, {
     rv$dt_row <- which(stringr::str_detect(rv$df[,"Действия"], pattern = paste0("\\b", input$current_id, "\\b")))
     
     current_id = as.numeric(rv$df[rv$dt_row, "id"])
     query <- "DELETE FROM Visits WHERE id = '" %+% current_id %+%"'"
-    browser()
+
     conn <- dbConnect(RSQLite::SQLite(), "PatientsDB.db")
     dbExecute(conn, query)
     on.exit(dbDisconnect(conn))
-    browser()
+
     rv$df_visits <- rv$df_visits[-rv$dt_visit_row, ]
     
     shiny::removeModal()
@@ -612,14 +646,14 @@ server <- function(input, output) {
     # rv$df[rv$dt_row, "birth_day"] <- input$birthday_modal
     # rv$df[rv$dt_row, "ethnicity"] <- input$eth_modal
     # rv$df[rv$dt_row, "Buttons"] <- rv$df$Buttons[rv$dt_row]
-    browser()
+
     rv$df[rv$dt_row, ] <- edited_row
     query <- "UPDATE Patients SET
               FIO ='" %+% edited_row[['FIO']] %+% "',
               birth_day = '" %+% edited_row[['birth_day']] %+% "',
               ethnicity ='" %+% which(stringr::str_detect(list_eths, edited_row[['ethnicity']])) %+% "'
               WHERE id = '" %+% edited_row[['id']] %+% "'"
-    browser()
+
     conn <- dbConnect(RSQLite::SQLite(), "PatientsDB.db")
     dbExecute(conn, query)
     on.exit(dbDisconnect(conn))
@@ -628,6 +662,65 @@ server <- function(input, output) {
     rv$edit_button = NULL
     
     shiny::removeModal()
+  })
+  
+  output$labs_output <- renderUI({
+    req(nrow(rv$df_labs)!= 0)
+    ui_parts <- c()
+    for(i in 1:nrow(rv$df_labs)){
+      ui_parts[[i]] <- div(
+        class = "accordion_box",
+        id = i,
+        fluidRow(
+            class = "acc_trigger",
+            h4(class = "col-6",
+              "Дата: "  %+% rv$df_labs[i,"date_lab"]),
+            shiny::icon(class = "col-6", style = "text-align: right",
+                        "plus")
+        ),
+        div(
+          class = "acc_container",
+          div(
+            class = "mb-3 row form-group",
+            style = "margin: 0 0",
+            tags$label(
+              class = "col-2 col-form-label",
+              "Значение PRL:"
+            ),
+            div(
+                class = "col-2",
+                textInput("PRL_" %+% i,
+                          value = rv$df_labs[i,"PRL"],
+                          label = NULL #необходим кастом)
+                )
+            ),
+            tags$label(
+              class = "col-2 col-form-label",
+              "Значение vitA:"
+            ),
+            div(
+              class = "col-2",
+              textInput("vitA_" %+% i, 
+                        value = rv$df_labs[i,"vitA"],
+                        label = NULL #необходим кастом)
+              )
+            )
+          ),
+          div(
+            class = "row",
+            HTML('<div class = "btn-group">
+                          <button class="btn btn-default action-button btn-info action_button" id="calcLab_',
+                 i, '" type="button" onclick=get_id_lab(this.id)>Рассчиать диагноз</button>
+                        <button class="btn btn-default action-button btn-info action_button" id="editLab_',
+                 i, '" type="button" onclick=get_id_lab(this.id)>Редактировать</button>
+                          <button class="btn btn-default action-button btn-danger action_button" id="deleteLab_',
+                 i, '" type="button" onclick=get_id_lab(this.id)><i class="fa fa-trash-alt"></i></button>
+                     </div>')
+          )
+        )
+      )
+    }
+    ui_parts
   })
 }
 # Run the application 
