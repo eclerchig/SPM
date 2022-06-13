@@ -116,3 +116,63 @@ modal_dVisit <- function(date_visit, edit) {
     )
   ) %>% shiny::showModal()
 }
+
+modal_dLab <- function(date, PRL, vitA, edit) {
+  if (edit) {
+    x <- "Подтвердить изменения"
+  } else {
+    x <- "Добавить запись"
+  }
+  shiny::modalDialog(
+    id = "edit_modal",
+    title = "Данные лабораторных тестов",
+    div(
+      class = "row",
+      div(
+        style = "display: inline-block;",
+        shiny::dateInput(
+          inputId ="date_modal",
+          label = "Дата сдачи тестов", 
+          value = date,
+          format = "yyyy-mm-dd",
+          language = "ru")
+      )
+    ),
+    div(
+      class = "row",
+      div(
+        style = "display: inline-block;",
+        shiny::numericInput(
+          inputId ="PRL_modal",
+          label = "PRL значение", 
+          value = PRL)
+      )
+    ),
+    div(
+      class = "row",
+      div(
+        style = "display: inline-block;",
+        shiny::numericInput(
+          inputId ="vitA_modal",
+          label = "Значение vitA", 
+          value = vitA)
+      )
+    ),
+    size = "m",
+    easyClose = TRUE,
+    footer = div(
+      class = "pull-right container",
+      shiny::actionButton(
+        inputId = "finalEdit_lab",
+        label = x,
+        icon = shiny::icon("edit"),
+        class = "btn-info"
+      ),
+      shiny::actionButton(
+        inputId = "dismiss_modal",
+        label = "Закрыть",
+        class = "btn-danger"
+      )
+    )
+  ) %>% shiny::showModal()
+}

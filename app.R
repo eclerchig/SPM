@@ -28,6 +28,7 @@ reactlog::reactlog_enable()
 
 #---------ПОДКЛЮЧЕНИЕ МОДУЛЕЙ------------
 source(here::here("modal_dialog.R"))
+source(here::here("algorithm/find_ctree.R"))
 #----------------------------------------
 
 title_pages = c("main_page", "card_patient")
@@ -156,7 +157,7 @@ ui <- bootstrapPage(
       h3("Клинические анализы по посещению",
          class = "mt-4"),
       shiny::actionButton(
-        inputId = "add_visit",
+        inputId = "add_lab",
         label = "Добавить запись анализов",
         icon = shiny::icon("plus"),
         class = "btn-success"
@@ -217,21 +218,6 @@ create_btns2 <- function(x) {
                      ))
 }
 
-create_btns3 <- function(x) {
-  x %>%
-    purrr::map_chr(~
-                     paste0(
-                       '<div class = "btn-group">
-                          <button class="btn btn-default action-button btn-info action_button" id="calcLab_',
-                       .x, '" type="button" onclick=get_id_lab(this.id)>Рассчиать диагноз</button>
-                        <button class="btn btn-default action-button btn-info action_button" id="editLab_',
-                       .x, '" type="button" onclick=get_id_lab(this.id)>Редактировать</button>
-                          <button class="btn btn-default action-button btn-danger action_button" id="deleteLab_',
-                       .x, '" type="button" onclick=get_id_lab(this.id)><i class="fa fa-trash-alt"></i></button>
-                     </div>'
-                     )
-    )
-}
 if (nrow(patients_db) != 0) {
   html_btns <- create_btns(1:nrow(patients_db))
   html_table <- patients_db %>%                                                       #добавляем столбец с определением HTML-кода кнопки для строки таблицы
@@ -383,6 +369,8 @@ server <- function(input, output) {
   shiny::observeEvent(input$goto_patients, {
     rv$page <- "main_page"
     print(rv$page)
+    rv$show_labs <- FALSE
+    rv$df_labs = NULL
   })
   
   observeEvent(input$edit_patient, {
@@ -524,6 +512,7 @@ server <- function(input, output) {
     conn <- dbConnect(RSQLite::SQLite(), "PatientsDB.db")
     rv$df_labs <-  dbGetQuery(conn, quary) %>%
       transmute(id = id,
+                id_visit = id_visit, 
                 date_lab = as.Date(date),
                 PRL = PRL,
                 vitA = vitA)
@@ -709,12 +698,9 @@ server <- function(input, output) {
           div(
             class = "row",
             HTML('<div class = "btn-group">
-                          <button class="btn btn-default action-button btn-info action_button" id="calcLab_',
-                 i, '" type="button" onclick=get_id_lab(this.id)>Рассчиать диагноз</button>
-                        <button class="btn btn-default action-button btn-info action_button" id="editLab_',
-                 i, '" type="button" onclick=get_id_lab(this.id)>Редактировать</button>
-                          <button class="btn btn-default action-button btn-danger action_button" id="deleteLab_',
-                 i, '" type="button" onclick=get_id_lab(this.id)><i class="fa fa-trash-alt"></i></button>
+                          <button class="btn btn-default action-button btn-info action_button" id="calcLab_',i,'" type="button" onclick=get_id_lab(this.id)>Рассчиать диагноз</button>
+                        <button class="btn btn-default action-button btn-info action_button" id="editLab_',i,'" type="button" onclick=get_id_lab(this.id)>Редактировать</button>
+                          <button class="btn btn-default action-button btn-danger action_button" id="deleteLab_',i,'" type="button" onclick=get_id_lab(this.id)><i class="fa fa-trash-alt"></i></button>
                      </div>')
           )
         )
@@ -722,6 +708,129 @@ server <- function(input, output) {
     }
     ui_parts
   })
+  
+  #------------------------ ФУНКЦИЯ СОРТИРОВКИ ТАБЛИЦЫ LAB_TESTS-------------------
+  sort_labs <- function(df){
+    return (df[order(as.Date(df$date_lab, format="%Y-%m-%d")),])
+  }
+  
+  #-------------------------ФУНКЦИИ НА ВЫЗОВ ВЫБОРА СТРОКИ В СПИСКЕ LAB_TESTS------------------------------
+  shiny::observeEvent(input$current_id_lab, {
+    shiny::req(!is.null(input$current_id_lab) & stringr::str_detect(input$current_id_lab, pattern = "delete"))
+    print("change_row_lab")
+    rv$dt_lab_row <- as.numeric(strsplit(input$current_id_lab, "_")[[1]][2])
+    confirm_delete("Lab")
+  })
+  
+  shiny::observeEvent(input$current_id_lab, {
+    shiny::req(!is.null(input$current_id_lab) & stringr::str_detect(input$current_id_lab, pattern = "edit"))
+    print("change_row_lab")
+    browser()
+    rv$dt_lab_row <- as.numeric(strsplit(input$current_id_lab, "_")[[1]][2])
+    select_row <- rv$df_labs[rv$dt_lab_row, ]
+    
+    browser()
+    
+    rv$edit_button = TRUE
+    modal_dLab(
+      select_row$date, select_row$PRL, select_row$vitA, edit = rv$edit_button)
+  })
+  
+  shiny::observeEvent(input$current_id_lab, {
+    shiny::req(!is.null(input$current_id_lab) & stringr::str_detect(input$current_id_lab, pattern = "calc"))
+    print("change_row_lab")
+    rv$dt_lab_row <- as.numeric(strsplit(input$current_id_lab, "_")[[1]][2])
+    select_row <- rv$df_labs[rv$dt_lab_row, ]
+  })
+  
+  #-------------------------ФУНКЦИИ НА ВЫЗОВ ДОБАВЛЕНИЯ СТРОКИ В СПИСОК LAB_TESTS------------------------------
+  
+  shiny::observeEvent(input$add_lab, {
+    print("add lab")
+    rv$edit_button = FALSE
+    modal_dLab(
+      date = "", PRL = "", vitA = "", edit = rv$edit_button)
+  })
+  
+  #-------------------------ФУНКЦИЯ ПОДТВЕРЖДЕНИЯ ИЗМЕНЕНИЯ СТРОКИ LAB_TESTS------------------------------
+  
+  shiny::observeEvent(input$finalEdit_lab, {
+    shiny::req(!is.null(input$current_id) & (rv$edit_button == TRUE))
+    
+    
+    rv$df_labs[rv$dt_lab_row, "date_lab"] <- as.Date(input$date_modal)
+    rv$df_labs[rv$dt_lab_row, "vitA"] <- input$vitA_modal
+    rv$df_labs[rv$dt_lab_row, "PRL"] <- input$PRL_modal
+    
+    rv$df_labs <- sort_labs(rv$df_labs)
+    
+    browser()
+    query <- "UPDATE Lab_tests SET
+              date ='" %+% as.Date(input$date_modal) %+% "',
+              vitA = '" %+% input$vitA_modal %+% "',
+              PRL ='" %+% input$PRL_modal %+% "'
+              WHERE id = '" %+% rv$df_labs[rv$dt_lab_row, "id"] %+% "'"
+    browser()
+    conn <- dbConnect(RSQLite::SQLite(), "PatientsDB.db")
+    browser()
+    dbExecute(conn, query)
+    on.exit(dbDisconnect(conn))
+    #обновление на странице карты пациента
+    browser()
+    rv$edit_button = NULL
+    
+    shiny::removeModal()
+  })
+  
+  #-------------------------ФУНКЦИЯ ПОДТВЕРЖДЕНИЯ ДОБАВЛЕНИЯ СТРОКИ В LABTESTS------------------------------
+  
+  shiny::observeEvent(input$finalEdit_lab, {
+    shiny::req(!is.null(input$current_id) & (rv$edit_button == FALSE))
+    print("final_add enter")
+    
+    add_row <- data.frame(
+      id = rv$keep_track_id_labs,
+      id_visit = rv$dt_visit_row,
+      date_lab = as.Date(input$date_modal),
+      PRL = input$PRL_modal,
+      vitA = input$vitA_modal
+    )
+    query <- "INSERT INTO Lab_tests (id_visit, date, PRL, vitA) VALUES (
+              '" %+% add_row[,'id_visit'] %+% "',
+              '" %+% add_row[,'date_lab'] %+% "',
+              '" %+% add_row[,'PRL'] %+% "',
+              '" %+% add_row[,'vitA'] %+% "')"
+    conn <- dbConnect(RSQLite::SQLite(), "PatientsDB.db")
+    dbExecute(conn, query)
+    on.exit(dbDisconnect(conn))
+    
+    browser()
+    rv$df_labs <- rv$df_labs %>%
+      dplyr::bind_rows(add_row) %>% sort_labs()
+    browser()
+    rv$keep_track_id_labs <- max(rv$df_labs[,"id"]) + 1
+    browser()
+    
+    rv$edit_button = NULL
+    shiny::removeModal()
+  })
+  
+  #-------------------------ФУНКЦИЯ ПОДТВЕРЖДЕНИЯ УДАЛЕНИЯ СТРОКИ В LABTESTS------------------------------
+  shiny::observeEvent(input$finalConfirm_deleteLab, {
+    
+    current_id = as.numeric(rv$df_labs[rv$dt_lab_row, "id"])
+    query <- "DELETE FROM Lab_tests WHERE id = '" %+% current_id %+%"'"
+    
+    conn <- dbConnect(RSQLite::SQLite(), "PatientsDB.db")
+    dbExecute(conn, query)
+    on.exit(dbDisconnect(conn))
+    
+    rv$df_labs <- sort_labs(rv$df_labs[-rv$dt_lab_row, ])
+
+    
+    shiny::removeModal()
+  })
+  
 }
 # Run the application 
 shinyApp(ui = ui, server = server)
