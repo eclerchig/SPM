@@ -30,6 +30,27 @@ reactlog::reactlog_enable()
 source(here::here("modal_dialog.R"))
 source(here::here("algorithm/find_ctree.R"))
 #----------------------------------------
+find_best_tree()
+print(best_tree)
+row <- data.frame(
+  DK = 1,
+  KD_CT = 1,
+  MDA = 1,
+  COD = 1,
+  GSH = 1,
+  vitE = 1,
+  vitA = 1,
+  age_visit1 = 1,
+  ethnicity = 1,
+  PRL2 = 1
+) %>% mutate (
+  ethnicity = factor(ethnicity, levels = c(1, 2, 3), labels = c('White', 'Asian', 'Mixed'))
+)
+
+predict_fibroids(row[1,])
+print(predict_fibroids(row[1,])[[1]])
+
+
 
 title_pages = c("main_page", "card_patient")
 conn <- dbConnect(RSQLite::SQLite(), "PatientsDB.db")
@@ -165,6 +186,22 @@ ui <- bootstrapPage(
       div(
         class="accordion_area mt-2",
         uiOutput("labs_output")
+      ),
+      div(
+        id = "block_diagnosis",
+        h3("Вычисленный диагноз",
+           class = "mt-4"),
+        shiny::textInput(
+          inputId ="diagnosis_input",
+          label = "Миома матки:", 
+          value = ""),
+        div(
+          class="mb-3",
+          textAreaInput(inputId="text_desciption",
+                        label = "Описание хода постановки диагноза",
+                        width = '100%',
+                        rows = 10)
+        )
       )
     )
   )
