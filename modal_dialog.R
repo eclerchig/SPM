@@ -6,7 +6,7 @@ modal_dialog <- function(FIO, birth_day, eth, list_eths, edit) {
   }
   shiny::modalDialog(
     id = "edit_modal",
-    title = "Данные пациента",
+    title = "Форма заполнения информации о пациенте",
     div(
       class = "row",
       div(
@@ -18,6 +18,7 @@ modal_dialog <- function(FIO, birth_day, eth, list_eths, edit) {
       ),
       div(
         style = "display: inline-block;",
+        class = "col-6",
         shiny::dateInput(
           inputId ="birthday_modal",
           label = "Дата рождения", 
@@ -27,6 +28,7 @@ modal_dialog <- function(FIO, birth_day, eth, list_eths, edit) {
       ),
       div(
         style = "display: inline-block;",
+        class = "col-6",
         shiny::selectInput(
           inputId = "eth_modal", 
           label = "Национальность", 
@@ -45,8 +47,9 @@ modal_dialog <- function(FIO, birth_day, eth, list_eths, edit) {
       ),
       shiny::actionButton(
         inputId = "dismiss_modal",
-        label = "Закрыть",
-        class = "btn-danger"
+        label = "Отменить",
+        class = "btn-danger",
+        icon = shiny::icon("ban"),
       )
     )
   ) %>% shiny::showModal()
@@ -55,7 +58,7 @@ modal_dialog <- function(FIO, birth_day, eth, list_eths, edit) {
 confirm_delete <- function(mode){
   shiny::modalDialog(
     id = "confirm_modal",
-    title = "Подверждение удаления",
+    title = "Подтверждение удаления записи",
     p("Вы действительно хотите удалить запись?"),
     size = "m",
     easyClose = TRUE,
@@ -69,8 +72,8 @@ confirm_delete <- function(mode){
       ),
       shiny::actionButton(
         inputId = "dismiss_confirm",
-        label = "Отменить",
-        icon = shiny::icon("fa-xmark"),
+        label = "Отмена",
+        icon = shiny::icon("ban"),
         class = "btn-danger"
       )
     )
@@ -85,11 +88,12 @@ modal_dVisit <- function(date_visit, edit) {
   }
   shiny::modalDialog(
     id = "edit_modal",
-    title = "Данные посещения",
+    title = "Форма заполнения информации о посещении",
     div(
-      class = "row",
+      class = "row justify-content-center",
       div(
         style = "display: inline-block;",
+        class = "col-6",
         shiny::dateInput(
           inputId ="visit_modal",
           label = "Дата посещения", 
@@ -110,14 +114,15 @@ modal_dVisit <- function(date_visit, edit) {
       ),
       shiny::actionButton(
         inputId = "dismiss_modal",
-        label = "Закрыть",
-        class = "btn-danger"
+        label = "Отмена",
+        class = "btn-danger",
+        icon = shiny::icon("ban")
       )
     )
   ) %>% shiny::showModal()
 }
 
-modal_dLab <- function(date, PRL, vitA, edit) {
+modal_dLab <- function(date, DK, KDCT, MDA, COD, GSH, vitE, vitA, PRL, edit) {
   if (edit) {
     x <- "Подтвердить изменения"
   } else {
@@ -125,14 +130,14 @@ modal_dLab <- function(date, PRL, vitA, edit) {
   }
   shiny::modalDialog(
     id = "edit_modal",
-    title = "Данные лабораторных тестов",
+    title = "Форма заполнения информации о клинических исследованиях",
     div(
       class = "row",
       div(
         style = "display: inline-block;",
         shiny::dateInput(
           inputId ="date_modal",
-          label = "Дата сдачи тестов", 
+          label = "Дата сдачи анализов", 
           value = date,
           format = "yyyy-mm-dd",
           language = "ru")
@@ -143,9 +148,59 @@ modal_dLab <- function(date, PRL, vitA, edit) {
       div(
         style = "display: inline-block;",
         shiny::numericInput(
-          inputId ="PRL_modal",
-          label = "PRL значение", 
-          value = PRL)
+          inputId ="DK_modal",
+          label = "Величина DK", 
+          value = DK)
+      )
+    ),
+    div(
+      class = "row",
+      div(
+        style = "display: inline-block;",
+        shiny::numericInput(
+          inputId ="KDCT_modal",
+          label = "Величина KD-CT", 
+          value = KDCT)
+      )
+    ),
+    div(
+      class = "row",
+      div(
+        style = "display: inline-block;",
+        shiny::numericInput(
+          inputId ="MDA_modal",
+          label = "Величина MDA", 
+          value = MDA)
+      )
+    ),
+    div(
+      class = "row",
+      div(
+        style = "display: inline-block;",
+        shiny::numericInput(
+          inputId ="COD_modal",
+          label = "Величина COD", 
+          value = COD)
+      )
+    ),
+    div(
+      class = "row",
+      div(
+        style = "display: inline-block;",
+        shiny::numericInput(
+          inputId ="GSH_modal",
+          label = "Величина GSH", 
+          value = GSH)
+      )
+    ),
+    div(
+      class = "row",
+      div(
+        style = "display: inline-block;",
+        shiny::numericInput(
+          inputId ="vitE_modal",
+          label = "Количество витамина E", 
+          value = vitE)
       )
     ),
     div(
@@ -154,8 +209,18 @@ modal_dLab <- function(date, PRL, vitA, edit) {
         style = "display: inline-block;",
         shiny::numericInput(
           inputId ="vitA_modal",
-          label = "Значение vitA", 
+          label = "Количество витамина А", 
           value = vitA)
+      )
+    ),
+    div(
+      class = "row",
+      div(
+        style = "display: inline-block;",
+        shiny::numericInput(
+          inputId ="PRL_modal",
+          label = "Величина PRL", 
+          value = PRL)
       )
     ),
     size = "m",
@@ -170,8 +235,9 @@ modal_dLab <- function(date, PRL, vitA, edit) {
       ),
       shiny::actionButton(
         inputId = "dismiss_modal",
-        label = "Закрыть",
-        class = "btn-danger"
+        label = "Отмена",
+        class = "btn-danger",
+        icon = shiny::icon("ban")
       )
     )
   ) %>% shiny::showModal()

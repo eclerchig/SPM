@@ -1,38 +1,170 @@
+.table.dataTable tbody td.active, .table.dataTable tbody tr.active td {
+  background-color: #5b5b5b !important;
+}
+
+tr {
+      vertical-align: middle;
+}
+
+.page-item.active .page-link {
+    background-color: #565656 !important;
+    border-color: #565656 !important;
+}
+
+.block-content{
+  border-color: #acb1b7!important;
+  padding-bottom: 15px;
+}
+
+
 .modal-dialog {
   max-width: 400px !important;
 }
 
-#FIO_modal {
-  width: 100% important;
+#block_diagnosis .control-label{
+  font-size: 1.2rem;
 }
 
-#birthday_modal {
-  width: 150px;
+.modal-dialog .container{
+  padding: 0;
+}
+
+.main_info .form-control-plaintext {
+  
+}
+
+.shiny-input-container {
+  width: 100% !important;
 }
 
 #eth_modal div.selectize-control div.selectize-input{
   width: 200px;
 }
 
-.accordion_box
-{
-  border: 1px solid gray;
-  background: #e1e1e1;
-  color: #332e2e;
-  border-radius: 10px;
-  margin-bottom: 20px;
+/*стили для кнопок*/
+
+.btn:focus {
+  box-shadow: 0;
 }
 
+.btn-add {
+  background-color: #47be2e;
+  border-color: #47be2e;
+  color: white;
+  border: 1px #27a036 solid;
+}
+
+.btn-add:focus {
+    color: #fff;
+    background-color: #4B8E3D;
+    border-color: #4B8E3D;
+    box-shadow: 0 0 0 0.25rem rgb(66 155 41 / 55%);
+}
+
+.btn-add:hover {
+    color: #fff;
+    background-color: #4B8E3D;
+    border-color: #4B8E3D;
+}
+
+.btn-more {
+  background-color: #f98a3d;
+  border-color: #f98a3d;
+  color: black;
+}
+
+.btn-more:focus {
+    color: black;
+    background-color: #cf6e29;
+    border-color: #cf6e29;
+    box-shadow: 0 0 0 0.25rem rgb(161 120 37 / 55%);
+}
+
+.btn-more:hover {
+    color: black;
+    background-color: #cf6e29;
+    border-color: #cf6e29;
+}
+
+.btn-edit {
+  background-color: #228F80;
+  border-color: #228F80;
+  color: white;
+}
+
+.btn-edit:focus {
+    color: white;
+    background-color: #2E6B63;
+    border-color: #2E6B63;
+    box-shadow: 0 0 0 0.25rem rgb(21 131 98 / 55%);
+}
+
+.btn-edit:hover {
+    color: white;
+    background-color: #2E6B63;
+    border-color: #2E6B63;
+}
+
+.accordion_box
+{
+    border: 4px solid #d0d0d0;
+    background: #ebebeb;
+    color: #332e2e;
+    border-radius: 2.5px;
+}
+
+.accordion_box .btn{
+  border-radius: 0rem;;
+}
+
+html{
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+}
+
+table th {
+  text-align: center;
+}
+
+#DataTables_Table_1 tr td:nth-of-type(2), #DataTables_Table_1 tr td:nth-of-type(3), #DataTables_Table_0 tr td:nth-of-type(3){
+  text-align: center;
+}
+
+#visit_modal, #visit_modal input {
+  text-align: center;
+}
+
+.alert-danger {
+  border-width: 2px;
+  border-color: #842029;
+  margin: 0;
+}
+
+.alert-danger .alert-content{
+  padding: 0;
+}
+
+.alert-warning {
+  border-width: 2px;
+  border-color: #664d0394;
+}
 .accordion_box.active
 {
   background: #fff;
 }
 
 .acc_trigger {
-  padding: 15px 40px;
+  padding: 15px 20px;
   margin: 0;
   position:relative;
   cursor: pointer;
+   border-color: #d0d0d0 !important;
+}
+
+.acc_trigger h4, .acc_trigger i {
+  margin:auto;
 }
 
 .acc_triger i{
@@ -44,9 +176,28 @@
 
 .acc_container {
   line-height: 1.6;
+  text-align: right;
 }
 
 .acc_container p{
   margin-top: 0px;
 }
 
+.acc_container label{
+  padding-right: 0;
+}
+
+.modal-footer{
+  text-align: center;
+}
+
+
+.modal-header h4 {
+  margin-top: 0;
+}
+
+#ROCplot {
+  width: 320px !important; 
+  height: 300px !important; 
+  padding: 0
+}

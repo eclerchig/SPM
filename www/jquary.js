@@ -1,6 +1,12 @@
 $(document).ready(function() {
+  alert('Библиотека подключена и работает!');
+  $('.main_info input').prop('readonly', true);
   $('.acc_container label').prop('readonly', true);
-  $('.accordion-box h3').setAttribute("aria-hidden", "true");
+  $('.acc_container label').prop('readonly', true);
+  $('.acc_container label').prop('readonly', true);
+}
+  
+$('.accordion-box h3').setAttribute("aria-hidden", "true");
   $('.accordion_box:first').addClass('active');
   $('.accordion_box: first').children('.acc_trigger').children('i').addClass('fa-minus');
   $('.accordion_box: first').children('.acc_trigger').addClass('selected').next('.acc_container').show()
